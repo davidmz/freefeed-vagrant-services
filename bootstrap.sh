@@ -2,15 +2,26 @@
 
 set -o errexit
 
-sudo apt-get update
-sudo apt-get install figlet --assume-yes
+# Becaming root
+if [ ! $UID -eq 0 ]; then
+  echo "RESTARTING AS ROOT"
+  exec sudo "$0"
+fi
+
+
+apt-get update
+apt-get install figlet --assume-yes
+
+# Adjusting time
+timedatectl set-ntp on
+systemctl restart systemd-timesyncd
 
 #
 # Redis
 #
 figlet -f standard Redis
 
-sudo apt-get install redis-server --assume-yes
+apt-get install redis-server --assume-yes
 # Ensure that Redis is working
 redis-cli ping
 
@@ -19,36 +30,43 @@ redis-cli ping
 #
 figlet -f standard PostgreSQL
 
-sudo apt-get install postgresql-10 postgresql-contrib --assume-yes
+PG_VERSION=11
+PG_DATA_DIR="/var/lib/postgresql/$PG_VERSION/main"
+PG_CONF_DIR="/etc/postgresql/$PG_VERSION/main"
 
-sudo service postgresql stop
+echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+apt-get update
 
-sudo sed -i -e "s/#listen_addresses = 'localhost'/listen_addresses = '0.0.0.0'/" /etc/postgresql/10/main/postgresql.conf
-sudo sh -c 'echo "local all postgres peer" > /etc/postgresql/10/main/pg_hba.conf'
-sudo sh -c 'echo "host all freefeed all trust" >> /etc/postgresql/10/main/pg_hba.conf'
+apt-get install "postgresql-$PG_VERSION" postgresql-contrib --assume-yes
+
+service postgresql stop
+
+sed -i -e "s/#listen_addresses = 'localhost'/listen_addresses = '0.0.0.0'/" "$PG_CONF_DIR/postgresql.conf"
+# sh << END
+echo "local all postgres peer" > "$PG_CONF_DIR/pg_hba.conf"
+echo "host all freefeed all trust" >> "$PG_CONF_DIR/pg_hba.conf"
+# END
 
 #
 # Re-create database with russian locale
-sudo locale-gen ru_RU
-sudo locale-gen ru_RU.UTF-8
-sudo update-locale 
+locale-gen ru_RU
+locale-gen ru_RU.UTF-8
+update-locale 
 
-DB_DIR=/var/lib/postgresql/10/main
-sudo rm -rf $DB_DIR
-sudo mkdir $DB_DIR
-sudo chown postgres:postgres $DB_DIR
-sudo chmod 700 $DB_DIR
-sudo -u postgres /usr/lib/postgresql/10/bin/initdb --encoding=utf-8 --locale=ru_RU.UTF-8 $DB_DIR
+rm -rf $PG_DATA_DIR/*
+sudo -u postgres "/usr/lib/postgresql/$PG_VERSION/bin/initdb" --encoding=utf-8 --locale=ru_RU.UTF-8 "$PG_DATA_DIR"
 # Database is initialized
 #
 
-sudo service postgresql start
+service postgresql start
 
-sudo -u postgres psql -c "create user freefeed with password 'freefeed';"
-sudo -u postgres psql -c 'alter user freefeed with superuser;'
-
-sudo -u postgres psql -c 'create database freefeed with owner freefeed;'
-sudo -u postgres psql -c 'create database freefeed_test with owner freefeed;'
+sudo -u postgres psql << END
+create user freefeed with password 'freefeed';
+alter user freefeed with superuser;
+create database freefeed with owner freefeed;
+create database freefeed_test with owner freefeed;
+END
 
 #
 # All done
