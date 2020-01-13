@@ -9,7 +9,7 @@ First you need to install [Vagrant](https://www.vagrantup.com/), the virtual mac
 
 Second, you need to have some virtual machines provider. This repository supports the following providers: [Oracle VirtualBox](https://www.virtualbox.org/) and [Microsoft Hyper-V](https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/).
 
-<details><summary>About the Hyper-V</summary>
+### About the Hyper-V
 Hyper-V is included by default in Windows starting from 8.1 version (Enterprise, Pro, or Education only) but require to be enabled by user (see [here](https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v) and [here](https://www.vagrantup.com/docs/hyperv/)). Keep in mind that enabling Hyper-V will cause VirtualBox, VMware, and any other virtualization technology to no longer work.
 </details>
 
