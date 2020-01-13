@@ -1,0 +1,11 @@
+{
+  "redis": {
+    "port": 16379
+  },
+
+  "postgres": {
+    "connection": {
+      "port": 15432
+    }
+  }
+}
