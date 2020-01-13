@@ -16,6 +16,9 @@ apt-get install figlet --assume-yes
 timedatectl set-ntp on
 systemctl restart systemd-timesyncd
 
+# Enabling loopback IPv6 for the redis
+sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=0
+
 #
 # Redis
 #
@@ -30,12 +33,13 @@ redis-cli ping
 #
 figlet -f standard PostgreSQL
 
-PG_VERSION=11
+PG_VERSION=10
 PG_DATA_DIR="/var/lib/postgresql/$PG_VERSION/main"
 PG_CONF_DIR="/etc/postgresql/$PG_VERSION/main"
 
 echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+wget --quiet -O ACCC4CF8.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+apt-key add ACCC4CF8.asc
 apt-get update
 
 apt-get install "postgresql-$PG_VERSION" postgresql-contrib --assume-yes

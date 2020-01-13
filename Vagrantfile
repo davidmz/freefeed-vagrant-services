@@ -17,11 +17,16 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 6379, host: 16379
 
   #----------------------------------------------------------------
-  config.vm.box = "ubuntu/bionic64"
+  config.vm.box = "generic/ubuntu1804"
   config.vm.provision "shell", path: "bootstrap.sh", privileged: false
 
-  config.vm.provider "virtualbox" do |vb|
-    vb.name = "freefeed"
-    vb.memory = "2048"
+  config.vm.provider "virtualbox" do |prv|
+    prv.name = "freefeed"
+    prv.memory = "2048"
+  end
+
+  config.vm.provider "hyperv" do |prv|
+    prv.vmname = "freefeed"
+    prv.memory = "2048"
   end
 end
