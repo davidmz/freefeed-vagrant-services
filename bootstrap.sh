@@ -33,7 +33,7 @@ redis-cli ping
 #
 figlet -f standard PostgreSQL
 
-PG_VERSION=10
+PG_VERSION=12
 PG_DATA_DIR="/var/lib/postgresql/$PG_VERSION/main"
 PG_CONF_DIR="/etc/postgresql/$PG_VERSION/main"
 
