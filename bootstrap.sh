@@ -23,8 +23,13 @@ sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=0
 # Redis
 #
 figlet -f standard Redis
-
 apt-get install redis-server --assume-yes
+
+# Disable IPv6 listening
+service redis-server stop
+sed -i -e "s/bind 127.0.0.1 ::1/bind 0.0.0.0/" /etc/redis/redis.conf
+service redis-server start
+
 # Ensure that Redis is working
 redis-cli ping
 
