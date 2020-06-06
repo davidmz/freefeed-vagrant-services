@@ -8,29 +8,30 @@ if [ ! $UID -eq 0 ]; then
   exec sudo "$0"
 fi
 
+apk update
+apk upgrade
 
-apt-get update
-apt-get install figlet --assume-yes
+apk add nano figlet
 
-# Adjusting time
-timedatectl set-ntp on
-systemctl restart systemd-timesyncd
-
-# Enabling loopback IPv6 for the redis
-sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=0
+# Adjust time
+# For some reason constraints isnt working in this distro
+# see https://gitlab.alpinelinux.org/alpine/aports/issues/9635
+sed -i -e "s/constraints /#constraints /" /etc/ntpd.conf
+sed -i -e "s/#NTPD_OPTS=/NTPD_OPTS=-s/" /etc/conf.d/openntpd
+service openntpd restart
 
 #
 # Redis
 #
 figlet -f standard Redis
-apt-get install redis-server --assume-yes
 
-# Disable IPv6 listening
-service redis-server stop
-sed -i -e "s/bind 127.0.0.1 ::1/bind 0.0.0.0/" /etc/redis/redis.conf
-service redis-server start
-
-# Ensure that Redis is working
+# Alpine 3.12 has Redis 5.0.9
+# https://pkgs.alpinelinux.org/packages?name=redis&branch=v3.12
+apk add redis
+# Listen to all addresses
+sed -i -e "s/bind 127.0.0.1/bind 0.0.0.0/" /etc/redis.conf
+service redis start
+# Test it
 redis-cli ping
 
 #
@@ -38,35 +39,19 @@ redis-cli ping
 #
 figlet -f standard PostgreSQL
 
-PG_VERSION=12
-PG_DATA_DIR="/var/lib/postgresql/$PG_VERSION/main"
-PG_CONF_DIR="/etc/postgresql/$PG_VERSION/main"
+# Alpine 3.12 has PostgreSQL 12.3
+# https://pkgs.alpinelinux.org/packages?name=postgresql&branch=v3.12
+apk add postgresql postgresql-contrib
 
-echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-wget --quiet -O ACCC4CF8.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
-apt-key add ACCC4CF8.asc
-apt-get update
+sed -i -e "s/#initdb_opts=\"--locale=en_US.UTF-8\"/initdb_opts=\"--locale=en_US.UTF-8 --encoding=utf-8\"/" \
+  /etc/conf.d/postgresql
 
-apt-get install "postgresql-$PG_VERSION" postgresql-contrib --assume-yes
+service postgresql setup
 
-service postgresql stop
-
-sed -i -e "s/#listen_addresses = 'localhost'/listen_addresses = '0.0.0.0'/" "$PG_CONF_DIR/postgresql.conf"
-# sh << END
-echo "local all postgres peer" > "$PG_CONF_DIR/pg_hba.conf"
-echo "host all freefeed all trust" >> "$PG_CONF_DIR/pg_hba.conf"
-# END
-
-#
-# Re-create database with russian locale
-locale-gen ru_RU
-locale-gen ru_RU.UTF-8
-update-locale 
-
-rm -rf $PG_DATA_DIR/*
-sudo -u postgres "/usr/lib/postgresql/$PG_VERSION/bin/initdb" --encoding=utf-8 --locale=ru_RU.UTF-8 "$PG_DATA_DIR"
-# Database is initialized
-#
+sed -i -e "s/#listen_addresses = 'localhost'/listen_addresses = '0.0.0.0'/" \
+  /etc/postgresql/postgresql.conf
+echo "local all postgres peer" >> /var/lib/postgresql/12/data/pg_hba.conf
+echo "host all freefeed all trust" >> /var/lib/postgresql/12/data/pg_hba.conf
 
 service postgresql start
 

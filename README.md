@@ -4,6 +4,14 @@ The [FreeFeed server](https://github.com/FreeFeed/freefeed-server) development r
 
 It is often not easy to install these services locally, especially on Windows. This repository will help you to create and run virtual machine (VM) with all necessary services installed and working.
 
+## Contents
+
+* PostgreSQL 12 server
+  * Pre-created databases 'freefeed' and 'freefeed_test'
+  * Username/password are freefeed/freefeed
+* Redis 5 server
+* All working on Alpine Linux 3.12 virtual machine
+
 ## Preparations
 First you need to install [Vagrant](https://www.vagrantup.com/), the virtual machines management tool.
 

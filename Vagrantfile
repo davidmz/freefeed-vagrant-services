@@ -1,8 +1,7 @@
 Vagrant.configure("2") do |config|
-  config.vm.box = "generic/ubuntu1804"
-  config.vm.provision "shell", path: "bootstrap.sh", privileged: false
-  config.vm.hostname = "freefeed"
+  config.vm.box = "generic/alpine312"
   config.vm.define "freefeed"
+  config.vm.provision "shell", path: "bootstrap.sh", privileged: false
 
   config.vm.provider "virtualbox" do |prv|
     prv.name = "freefeed"
