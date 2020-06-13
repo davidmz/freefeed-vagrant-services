@@ -33,6 +33,7 @@ sed -i -e "s/bind 127.0.0.1/bind 0.0.0.0/" /etc/redis.conf
 service redis start
 # Test it
 redis-cli ping
+rc-update add redis default
 
 #
 # PostgreSQL
@@ -54,6 +55,7 @@ echo "local all postgres peer" >> /var/lib/postgresql/12/data/pg_hba.conf
 echo "host all freefeed all trust" >> /var/lib/postgresql/12/data/pg_hba.conf
 
 service postgresql start
+rc-update add postgresql default
 
 sudo -u postgres psql << END
 create user freefeed with password 'freefeed';
